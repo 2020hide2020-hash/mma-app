@@ -34,7 +34,10 @@ export default function Home() {
       if (error) throw error
       if (data) {
         setMatch(data)
-        await fetchVotes(`${data.fighter1} vs ${data.fighter2}`)
+        // :bulb: 修正：ステートの更新を待たずに、取得したデータを直接渡して処理を続ける
+        await fetchVotes(data)
+      } else {
+        setLoading(false)
       }
     } catch (error: any) {
       console.error('試合データ取得エラー:', error.message)
@@ -43,9 +46,9 @@ export default function Home() {
   }
 
   // 2. 投票データをSupabaseから取得する
-  const fetchVotes = async (matchTitle: string) => {
-    if (!match) return
+  const fetchVotes = async (currentMatch: Match) => {
     try {
+      const matchTitle = `${currentMatch.fighter1} vs ${currentMatch.fighter2}`
       const { data, error } = await supabase
         .from('votes')
         .select('voted_for')
@@ -54,8 +57,8 @@ export default function Home() {
       if (error) throw error
 
       if (data) {
-        const f1Count = data.filter(v => v.voted_for === match.fighter1).length
-        const f2Count = data.filter(v => v.voted_for === match.fighter2).length
+        const f1Count = data.filter(v => v.voted_for === currentMatch.fighter1).length
+        const f2Count = data.filter(v => v.voted_for === currentMatch.fighter2).length
         setVotes({ fighter1Count: f1Count, fighter2Count: f2Count })
       }
     } catch (error: any) {
@@ -83,7 +86,7 @@ export default function Home() {
 
       alert(`${candidate} に投票しました！`)
       setLoading(true)
-      await fetchVotes(matchTitle)
+      await fetchVotes(match)
     } catch (error: any) {
       alert('投票に失敗しました: ' + error.message)
     } finally {
