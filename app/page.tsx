@@ -260,7 +260,7 @@ export default function Home() {
             const y = center + radius * Math.sin(angle)
             return <line key={i} x1={center} y1={center} x2={x} y2={y} stroke="#0f172a" strokeWidth="1" />
           })}
-          <polygon points={polygonPath} fill={`${color}12`} stroke={color} strokeWidth="2} />
+          <polygon points={polygonPath} fill={`${color}12`} stroke={color} strokeWidth="2" />
           {points.map((p, i) => {
             const angle = (i * 2 * Math.PI) / 7 - Math.PI / 2
             const labelX = center + (radius + 14) * Math.cos(angle)
