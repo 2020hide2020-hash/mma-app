@@ -38,8 +38,8 @@ interface Match {
   fighter1_id: number
   fighter2_id: number
   youtube_id: string
-  fighter1: Fighter // リレーションで結合
-  fighter2: Fighter // リレーションで結合
+  fighter1: Fighter
+  fighter2: Fighter
 }
 
 export default function Home() {
@@ -52,7 +52,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [isVoting, setIsVoting] = useState(false)
 
-  // 1. ログイン状態監視
+  // 1. Auth監視
   useEffect(() => {
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -67,7 +67,7 @@ export default function Home() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // 2. 最新の大会データとリレーション結合した試合データを取得
+  // 2. データ取得（Matchesの変更に追従する設計）
   const fetchEventData = async () => {
     try {
       const { data: eventData, error: eventError } = await supabase
@@ -81,7 +81,7 @@ export default function Home() {
       if (eventData) {
         setEvent(eventData)
 
-        // FighterマスタのデータをJOINして一気に取得
+        // Matches（試合カード）を軸に、対戦するFightersデータを動的結合して取得
         const { data: matchesData, error: matchesError } = await supabase
           .from('matches')
           .select(`
@@ -124,7 +124,6 @@ export default function Home() {
     fetchEventData()
   }, [])
 
-  // 3. 予想データ（投票状況）の取得
   const fetchPredictions = async (currentMatch: Match, currentUser: any) => {
     try {
       const { data: allVotes, error: votesError } = await supabase
@@ -151,7 +150,6 @@ export default function Home() {
     }
   }
 
-  // Googleログイン・ログアウト
   const handleLogin = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -165,7 +163,6 @@ export default function Home() {
     if (error) alert('ログアウト失敗: ' + error.message)
   }
 
-  // 予想投票の実行
   const handleVote = async (fighterId: number, fighterName: string) => {
     if (!selectedMatch || !user) return
     setIsVoting(true)
@@ -191,10 +188,144 @@ export default function Home() {
     }
   }
 
+  // :triangular_ruler: 7角形ステータスグラフ（レーダーチャート）を動的生成する関数
+  const renderRadarChart = (fighter: Fighter, color: string) => {
+    const size = 180
+    const center = size / 2
+    const radius = 60
+
+    // 7つのパラメータとマッピング
+    const stats = [
+      { label: '打撃', val: fighter.striking },
+      { label: 'パワー', val: fighter.power },
+      { label: '組み', val: fighter.wrestling },
+      { label: '寝技', val: fighter.grappling },
+      { label: 'スタミナ', val: fighter.cardio },
+      { label: '耐久', val: fighter.durability },
+      { label: 'IQ', val: fighter.iq }
+    ]
+
+    // 各頂点の座標を計算
+    const points = stats.map((stat, i) => {
+      const angle = (i * 2 * Math.PI) / 7 - Math.PI / 2
+      const r = (stat.val / 100) * radius
+      const x = center + r * Math.cos(angle)
+      const y = center + r * Math.sin(angle)
+      return { x, y, label: stat.label, maxVal: stat.val }
+    })
+
+    const polygonPath = points.map(p => `${p.x},${p.y}`).join(' ')
+
+    // 背景の補助線（100%, 75%, 50%, 25%のグリッド）
+    const gridLevels = [1.0, 0.75, 0.5, 0.25]
+    const gridPolygons = gridLevels.map(level => {
+      return stats.map((_, i) => {
+        const angle = (i * 2 * Math.PI) / 7 - Math.PI / 2
+        const r = radius * level
+        const x = center + r * Math.cos(angle)
+        const y = center + r * Math.sin(angle)
+        return `${x},${y}`
+      }).join(' ')
+    })
+
+    return (
+      <div className="flex flex-col items-center bg-slate-950/40 p-4 rounded-2xl border border-slate-850 w-full">
+        <div className="text-center mb-2">
+          <span className="text-xs text-slate-500 uppercase tracking-widest">{fighter.gym}</span>
+          <h4 className="text-xl font-black text-white">{fighter.name}</h4>
+          <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full inline-block mt-1">
+            {fighter.base_style}
+          </span>
+        </div>
+
+        {/* SVGグラフ本体 */}
+        <svg width={size} height={size} className="overflow-visible my-2">
+          {/* グリッド線の描画 */}
+          {gridPolygons.map((path, i) => (
+            <polygon
+              key={i}
+              points={path}
+              fill="none"
+              stroke="#334155"
+              strokeWidth="0.5"
+              strokeDasharray={i === 0 ? 'none' : '2,2'}
+            />
+          ))}
+          {/* 中心から各頂点への軸線 */}
+          {stats.map((_, i) => {
+            const angle = (i * 2 * Math.PI) / 7 - Math.PI / 2
+            const x = center + radius * Math.cos(angle)
+            const y = center + radius * Math.sin(angle)
+            return (
+              <line
+                key={i}
+                x1={center}
+                y1={center}
+                x2={x}
+                y2={y}
+                stroke="#1e293b"
+                strokeWidth="1"
+              />
+            )
+          })}
+          {/* 実数値ポリゴン（選手のステータス形状） */}
+          <polygon
+            points={polygonPath}
+            fill={`${color}15`}
+            stroke={color}
+            strokeWidth="2"
+          />
+          {/* パラメータのテキストラベル */}
+          {points.map((p, i) => {
+            const angle = (i * 2 * Math.PI) / 7 - Math.PI / 2
+            // ラベルを円周の少し外側に配置
+            const labelX = center + (radius + 16) * Math.cos(angle)
+            const labelY = center + (radius + 12) * Math.sin(angle)
+            return (
+              <g key={i}>
+                <text
+                  x={labelX}
+                  y={labelY}
+                  fill="#94a3b8"
+                  fontSize="10"
+                  fontWeight="bold"
+                  textAnchor="middle"
+                  alignmentBaseline="middle"
+                >
+                  {p.label}
+                </text>
+                <text
+                  x={labelX}
+                  y={labelY + 10}
+                  fill={color}
+                  fontSize="8"
+                  fontWeight="black"
+                  textAnchor="middle"
+                  alignmentBaseline="middle"
+                >
+                  {p.maxVal}
+                </text>
+              </g>
+            )
+          })}
+        </svg>
+
+        {/* スタイルタグ */}
+        <div className="flex flex-wrap gap-1 justify-center mt-4 h-12 overflow-hidden">
+          {fighter.style_tags?.map((t, idx) => (
+            <span key={idx} className="text-[9px] bg-slate-900 text-slate-400 border border-slate-800 px-2 py-0.5 rounded font-semibold">
+              #{t}
+            </span>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   if (loading || !event || !selectedMatch) {
     return (
       <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
-        <p className="text-xl font-bold animate-pulse">格闘技能力データ、熱狂構築中...</p>
+        <p className="text-xl font-bold animate-pulse">試合データ、および選手パラメータを取得中...</p>
       </main>
     )
   }
@@ -202,25 +333,6 @@ export default function Home() {
   const totalVotes = votes.fighter1Count + votes.fighter2Count
   const percentF1 = totalVotes > 0 ? Math.round((votes.fighter1Count / totalVotes) * 100) : 50
   const percentF2 = totalVotes > 0 ? Math.round((votes.fighter2Count / totalVotes) * 100) : 50
-
-  // :video_game: 能力値バーを描画するためのヘルパー
-  const renderStatBar = (label: string, val1: number, val2: number) => {
-    const total = val1 + val2
-    const p1 = total > 0 ? Math.round((val1 / total) * 100) : 50
-    return (
-      <div className="flex flex-col space-y-1">
-        <div className="flex justify-between text-xs font-semibold px-2">
-          <span className={`font-bold ${val1 > val2 ? 'text-blue-400 font-extrabold' : 'text-slate-400'}`}>{val1}</span>
-          <span className="text-slate-500 uppercase tracking-wider text-[10px]">{label}</span>
-          <span className={`font-bold ${val2 > val1 ? 'text-red-400 font-extrabold' : 'text-slate-400'}`}>{val2}</span>
-        </div>
-        <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden flex">
-          <div className="bg-blue-500 transition-all duration-500" style={{ width: `${p1}%` }} />
-          <div className="bg-red-500 transition-all duration-500" style={{ width: `${100 - p1}%` }} />
-        </div>
-      </div>
-    )
-  }
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center p-4 md:p-8 relative">
@@ -286,53 +398,17 @@ export default function Home() {
         {/* MIDDLE & RIGHT COLUMNS */}
         <section className="lg:col-span-2 flex flex-col space-y-6">
 
-          {/* :scales: :video_game: DETAILED FIGHTER COMPARISON UI */}
+          {/* :scales: :video_game: INDEPENDENT FIGHTER PARAMETERS (2つの独立したレーダーチャート表示) */}
           <div className="bg-slate-900 rounded-3xl border border-slate-900 p-6 flex flex-col">
             <h3 className="text-sm font-bold text-slate-400 mb-6 border-b border-slate-800 pb-2 flex justify-between items-center">
-              <span>選手パラメータ比較 (FIFAスタイル)</span>
-              <span className="text-xs text-slate-500 bg-slate-800 px-2 py-0.5 rounded">※能力値は主観・議論推奨</span>
+              <span>FIFA風 パラメーターバランス比較</span>
+              <span className="text-xs text-slate-500 bg-slate-800 px-2 py-0.5 rounded">パラメータ形状で相性を読む</span>
             </h3>
 
-            {/* Fighter Hero Info Card */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              {/* Fighter 1 Info */}
-              <div className="bg-slate-950/60 rounded-2xl p-4 border-l-4 border-blue-500 flex flex-col justify-between">
-                <div>
-                  <div className="text-[10px] text-blue-500 font-bold uppercase tracking-wider">{selectedMatch.fighter1.organization} • {selectedMatch.fighter1.weight_class}</div>
-                  <h4 className="text-2xl font-black text-white mt-1">{selectedMatch.fighter1.name}</h4>
-                  <p className="text-xs text-slate-400 mt-1">{selectedMatch.fighter1.gym}</p>
-                </div>
-                <div className="flex flex-wrap gap-1 mt-3">
-                  {selectedMatch.fighter1.style_tags?.map((t, idx) => (
-                    <span key={idx} className="text-[9px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded font-medium">#{t}</span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Fighter 2 Info */}
-              <div className="bg-slate-950/60 rounded-2xl p-4 border-l-4 border-red-500 flex flex-col justify-between">
-                <div>
-                  <div className="text-[10px] text-red-500 font-bold uppercase tracking-wider">{selectedMatch.fighter2.organization} • {selectedMatch.fighter2.weight_class}</div>
-                  <h4 className="text-2xl font-black text-white mt-1">{selectedMatch.fighter2.name}</h4>
-                  <p className="text-xs text-slate-400 mt-1">{selectedMatch.fighter2.gym}</p>
-                </div>
-                <div className="flex flex-wrap gap-1 mt-3">
-                  {selectedMatch.fighter2.style_tags?.map((t, idx) => (
-                    <span key={idx} className="text-[9px] bg-red-500/10 text-red-400 px-2 py-0.5 rounded font-medium">#{t}</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* :bar_chart: FIFA-Style Stats Bars */}
-            <div className="space-y-4 bg-slate-950/40 p-4 rounded-2xl border border-slate-950">
-              {renderStatBar('STRIKING (打撃力)', selectedMatch.fighter1.striking, selectedMatch.fighter2.striking)}
-              {renderStatBar('POWER (一撃必殺・KO力)', selectedMatch.fighter1.power, selectedMatch.fighter2.power)}
-              {renderStatBar('WRESTLING (テイクダウン・組み)', selectedMatch.fighter1.wrestling, selectedMatch.fighter2.wrestling)}
-              {renderStatBar('GRAPPLING (寝技・極め)', selectedMatch.fighter1.grappling, selectedMatch.fighter2.grappling)}
-              {renderStatBar('CARDIO (スタミナ・心肺)', selectedMatch.fighter1.cardio, selectedMatch.fighter2.cardio)}
-              {renderStatBar('DURABILITY (タフさ・耐久力)', selectedMatch.fighter1.durability, selectedMatch.fighter2.durability)}
-              {renderStatBar('FIGHT IQ (戦術・判断力)', selectedMatch.fighter1.iq, selectedMatch.fighter2.iq)}
+            {/* 2つの独立したグラフを左右に並べて表示 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {renderRadarChart(selectedMatch.fighter1, '#3b82f6')} {/* 青（Fighter 1） */}
+              {renderRadarChart(selectedMatch.fighter2, '#ef4444')} {/* 赤（Fighter 2） */}
             </div>
           </div>
 
