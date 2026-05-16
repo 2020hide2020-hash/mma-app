@@ -48,6 +48,19 @@ interface PredictionRow {
   user_id: string
 }
 
+type ActiveTab = 'prediction' | 'fighters' | 'articles' | 'mypage'
+
+const bottomTabs: Array<{
+  id: ActiveTab
+  label: string
+  caption: string
+}> = [
+  { id: 'prediction', label: '大会予想', caption: 'Cards' },
+  { id: 'fighters', label: '選手データ', caption: 'Database' },
+  { id: 'articles', label: '記事', caption: 'Media' },
+  { id: 'mypage', label: 'マイページ', caption: 'Account' },
+]
+
 const getErrorMessage = (error: unknown) => {
   return error instanceof Error ? error.message : '不明なエラーが発生しました'
 }
@@ -75,6 +88,8 @@ export default function Home() {
   const [myPredictionId, setMyPredictionId] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [isVoting, setIsVoting] = useState(false)
+  const [activeTab, setActiveTab] = useState<ActiveTab>('prediction')
+  const [fighterSearch, setFighterSearch] = useState('')
 
   useEffect(() => {
     const getSession = async () => {
@@ -279,7 +294,7 @@ export default function Home() {
     )
 
     return (
-      <svg width={size} height={size} className="mx-auto overflow-visible">
+      <svg viewBox={`0 0 ${size} ${size}`} className="mx-auto h-[132px] w-full max-w-[150px] overflow-visible md:h-[170px] md:max-w-[170px]">
         {gridPolygons.map((path, i) => (
           <polygon
             key={path}
@@ -361,6 +376,14 @@ export default function Home() {
   const totalVotes = votes.fighter1Count + votes.fighter2Count
   const percentF1 = totalVotes > 0 ? Math.round((votes.fighter1Count / totalVotes) * 100) : 50
   const percentF2 = totalVotes > 0 ? Math.round((votes.fighter2Count / totalVotes) * 100) : 50
+  const filteredFighters = allFighters.filter((fighter) => {
+    const keyword = fighterSearch.trim().toLowerCase()
+    if (!keyword) return true
+
+    return [fighter.name, fighter.organization, fighter.weight_class, fighter.gym, fighter.base_style]
+      .filter(Boolean)
+      .some((value) => value?.toLowerCase().includes(keyword))
+  })
   const predictedFighter =
     selectedMatch && myPredictionId
       ? myPredictionId === selectedMatch.fighter1.id
@@ -422,6 +445,46 @@ export default function Home() {
       </div>
     )
   }
+
+  const renderHeroFighterCard = (fighter: Fighter, side: 'left' | 'right') => (
+    <Link
+      href={`/fighters/${fighter.id}`}
+      className="group relative min-h-[216px] min-w-0 overflow-hidden rounded-[1.2rem] border border-white/10 bg-[#242424] bg-cover bg-center p-2.5 transition hover:border-[#E8002D]/60 active:scale-[0.99] md:min-h-[360px] md:rounded-[1.4rem] md:p-5"
+      style={getAvatarStyle(fighter.image_url)}
+    >
+      {!fighter.image_url && (
+        <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle,rgba(232,0,45,0.22),rgba(20,20,20,0.95))] text-6xl font-black text-white/15 md:text-7xl">
+          {fighter.name.slice(0, 1)}
+        </div>
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-black/15" />
+      <div className={`relative flex h-full flex-col justify-end ${side === 'right' ? 'items-end text-right' : ''}`}>
+        <p
+          className={`text-[9px] font-black uppercase tracking-[0.18em] md:text-[10px] md:tracking-[0.22em] ${
+            side === 'left' ? 'text-[#8AA8FF]' : 'text-[#FF6B7F]'
+          }`}
+        >
+          {side === 'left' ? 'Blue corner' : 'Red corner'}
+        </p>
+        <h4 className="mt-1 max-w-full break-words text-[clamp(1.12rem,5.4vw,1.72rem)] font-black leading-[0.95] tracking-[-0.05em] text-white [overflow-wrap:anywhere] md:mt-2 md:text-5xl">
+          {fighter.name}
+        </h4>
+        <p className="mt-2 max-w-full text-[10px] font-bold leading-snug text-[#C8C8C8] md:mt-3 md:text-sm">
+          {getFighterMeta(fighter)}
+        </p>
+        <div className={`mt-3 flex max-w-full flex-wrap gap-1 ${side === 'right' ? 'justify-end' : ''} md:mt-4 md:gap-1.5`}>
+          {(fighter.style_tags ?? []).slice(0, 2).map((tag) => (
+            <span
+              key={tag}
+              className="max-w-full truncate rounded-full border border-white/10 bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-white/80 md:px-2 md:py-1 md:text-[10px]"
+            >
+              #{tag}
+            </span>
+          ))}
+        </div>
+      </div>
+    </Link>
+  )
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#0A0A0A] pb-28 text-[#F5F5F5] md:pb-0">
@@ -493,7 +556,7 @@ export default function Home() {
           </div>
         </section>
 
-        {selectedMatch ? (
+        {activeTab === 'prediction' && (selectedMatch ? (
           <>
             <section className="mt-8 rounded-[2rem] border border-white/10 bg-[#141414]/90 p-3 shadow-[0_30px_120px_rgba(0,0,0,0.45)] md:mt-12 md:p-5">
               <div className="rounded-[1.65rem] border border-[#E8002D]/25 bg-[linear-gradient(135deg,rgba(232,0,45,0.18),rgba(36,36,36,0.72)_42%,rgba(10,10,10,0.96))] p-4 md:p-8">
@@ -507,51 +570,16 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-[1fr_auto_1fr] items-stretch gap-2 md:gap-6">
-                  {[selectedMatch.fighter1, selectedMatch.fighter2].map((fighter, index) => (
-                    <Link
-                      key={fighter.id}
-                      href={`/fighters/${fighter.id}`}
-                      className="group relative min-h-[260px] overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#242424] bg-cover bg-center p-3 transition hover:border-[#E8002D]/60 active:scale-[0.99] md:min-h-[360px] md:p-5"
-                      style={getAvatarStyle(fighter.image_url)}
-                    >
-                      {!fighter.image_url && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle,rgba(232,0,45,0.22),rgba(20,20,20,0.95))] text-7xl font-black text-white/15">
-                          {fighter.name.slice(0, 1)}
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-black/15" />
-                      <div className="relative flex h-full flex-col justify-end">
-                        <p
-                          className={`text-[10px] font-black uppercase tracking-[0.22em] ${
-                            index === 0 ? 'text-[#8AA8FF]' : 'text-[#FF6B7F]'
-                          }`}
-                        >
-                          Fighter {index + 1}
-                        </p>
-                        <h4 className="mt-2 text-2xl font-black leading-none tracking-[-0.04em] text-white md:text-5xl">
-                          {fighter.name}
-                        </h4>
-                        <p className="mt-3 text-xs font-bold text-[#AAAAAA] md:text-sm">{getFighterMeta(fighter)}</p>
-                        <div className="mt-4 flex flex-wrap gap-1.5">
-                          {(fighter.style_tags ?? []).slice(0, 3).map((tag) => (
-                            <span
-                              key={tag}
-                              className="rounded-full border border-white/10 bg-white/10 px-2 py-1 text-[10px] font-bold text-white/80"
-                            >
-                              #{tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
+                <div className="grid grid-cols-[minmax(0,1fr)_38px_minmax(0,1fr)] items-stretch gap-2 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-6">
+                  {renderHeroFighterCard(selectedMatch.fighter1, 'left')}
 
-                  <div className="flex flex-col items-center justify-center">
-                    <span className="rounded-full border border-white/15 bg-black px-2 py-3 text-xs font-black text-[#E8002D] shadow-[0_0_36px_rgba(232,0,45,0.35)] md:px-4 md:py-5 md:text-lg">
+                  <div className="flex min-w-0 flex-col items-center justify-center">
+                    <span className="rounded-full border border-white/15 bg-black px-2 py-3 text-[11px] font-black text-[#E8002D] shadow-[0_0_36px_rgba(232,0,45,0.35)] md:px-4 md:py-5 md:text-lg">
                       VS
                     </span>
                   </div>
+
+                  {renderHeroFighterCard(selectedMatch.fighter2, 'right')}
                 </div>
 
                 <div className="mt-5 rounded-[1.4rem] border border-white/10 bg-black/55 p-4 md:p-5">
@@ -641,23 +669,25 @@ export default function Home() {
                   </span>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-2 gap-3 md:gap-4">
                   {[selectedMatch.fighter1, selectedMatch.fighter2].map((fighter, index) => (
                     <Link
                       key={fighter.id}
                       href={`/fighters/${fighter.id}`}
-                      className="rounded-3xl border border-white/10 bg-[#0F0F0F] p-4 transition hover:border-[#E8002D]/50"
+                      className="min-w-0 rounded-3xl border border-white/10 bg-[#0F0F0F] p-3 transition hover:border-[#E8002D]/50 md:p-4"
                     >
-                      <div className="mb-4 flex items-center gap-3">
+                      <div className="mb-3 flex flex-col gap-2 md:mb-4 md:flex-row md:items-center md:gap-3">
                         <div
-                          className="h-14 w-14 rounded-2xl bg-[#242424] bg-cover bg-center"
+                          className="h-12 w-12 rounded-2xl bg-[#242424] bg-cover bg-center md:h-14 md:w-14"
                           style={getAvatarStyle(fighter.image_url)}
                         />
-                        <div>
+                        <div className="min-w-0">
                           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#666666]">
                             {fighter.gym || 'Unknown gym'}
                           </p>
-                          <h4 className="text-lg font-black text-white">{fighter.name}</h4>
+                          <h4 className="break-words text-sm font-black leading-tight text-white md:text-lg">
+                            {fighter.name}
+                          </h4>
                         </div>
                       </div>
                       {renderRadarChart(fighter, index === 0 ? '#5C7CFF' : '#E8002D')}
@@ -707,14 +737,139 @@ export default function Home() {
           <section className="mt-8 rounded-[2rem] border border-white/10 bg-[#141414] p-10 text-center">
             <p className="text-sm font-bold text-[#AAAAAA]">この大会にはまだ対戦カードが登録されていません。</p>
           </section>
+        ))}
+
+        {activeTab === 'fighters' && (
+          <section className="mt-8 rounded-[2rem] border border-white/10 bg-[#141414] p-5 md:p-8">
+            <div className="mb-5">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8002D]">Fighter database</p>
+              <h3 className="mt-1 text-2xl font-black text-white">選手データ</h3>
+              <p className="mt-2 text-sm leading-6 text-[#AAAAAA]">
+                選手名、所属、階級、スタイルから検索できます。大会予想タブの選手カードからも詳細ページへ移動できます。
+              </p>
+            </div>
+
+            <input
+              value={fighterSearch}
+              onChange={(event) => setFighterSearch(event.target.value)}
+              placeholder="選手名・ジム・階級で検索"
+              className="mb-4 w-full rounded-2xl border border-white/10 bg-black/60 px-4 py-3 text-sm font-bold text-white outline-none transition placeholder:text-[#666666] focus:border-[#E8002D]"
+            />
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredFighters.map((fighter) => (
+                <Link
+                  key={fighter.id}
+                  href={`/fighters/${fighter.id}`}
+                  className="flex min-w-0 items-center gap-3 rounded-3xl border border-white/10 bg-black/45 p-3 transition hover:border-[#E8002D]/50 active:scale-[0.99]"
+                >
+                  <div
+                    className="h-16 w-16 shrink-0 rounded-2xl bg-[#242424] bg-cover bg-center"
+                    style={getAvatarStyle(fighter.image_url)}
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate text-[10px] font-black uppercase tracking-[0.18em] text-[#666666]">
+                      {fighter.weight_class || fighter.organization || 'Fighter'}
+                    </p>
+                    <h4 className="truncate text-base font-black text-white">{fighter.name}</h4>
+                    <p className="truncate text-xs font-bold text-[#AAAAAA]">{fighter.base_style || fighter.gym}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {activeTab === 'articles' && (
+          <section className="mt-8 rounded-[2rem] border border-white/10 bg-[#141414] p-8 text-center">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8002D]">Articles</p>
+            <h3 className="mt-2 text-2xl font-black text-white">記事タブ</h3>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[#AAAAAA]">
+              試合展望、選手インタビュー、予想コラムを配信するためのタブです。記事コンテンツは今後ここに配置します。
+            </p>
+          </section>
+        )}
+
+        {activeTab === 'mypage' && (
+          <section className="mt-8 rounded-[2rem] border border-white/10 bg-[#141414] p-5 md:p-8">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8002D]">My page</p>
+            <h3 className="mt-1 text-2xl font-black text-white">マイページ</h3>
+            <div className="mt-5 rounded-3xl border border-white/10 bg-black/45 p-5">
+              {user ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="h-14 w-14 rounded-full bg-[#242424] bg-cover bg-center"
+                      style={
+                        typeof user.user_metadata?.avatar_url === 'string'
+                          ? { backgroundImage: `url(${user.user_metadata.avatar_url})` }
+                          : undefined
+                      }
+                    />
+                    <div>
+                      <p className="text-xs font-bold text-[#AAAAAA]">ログイン中</p>
+                      <p className="text-base font-black text-white">
+                        {typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : user.email}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <button
+                      onClick={handleShare}
+                      disabled={!predictedFighter}
+                      className="min-h-14 rounded-2xl border border-white/15 bg-white/10 px-5 py-3 text-sm font-black text-white transition active:scale-[0.98] disabled:opacity-45"
+                    >
+                      予想をSNSでシェア
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="min-h-14 rounded-2xl border border-[#E8002D]/35 bg-[#E8002D]/10 px-5 py-3 text-sm font-black text-[#FF6B7F] transition active:scale-[0.98]"
+                    >
+                      ログアウト
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-sm leading-6 text-[#AAAAAA]">
+                    Googleログインすると、勝敗予想の登録とSNSシェア導線を利用できます。
+                  </p>
+                  <button
+                    onClick={handleLogin}
+                    className="min-h-14 w-full rounded-2xl bg-white px-5 py-4 text-sm font-black text-[#0A0A0A] transition active:scale-[0.98]"
+                  >
+                    Googleログイン
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
         )}
       </div>
 
-      {selectedMatch && (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-white/10 bg-[#0A0A0A]/92 p-3 backdrop-blur-xl md:hidden">
-          {renderVoteActions(true)}
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[#0A0A0A]/94 px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 shadow-[0_-18px_42px_rgba(0,0,0,0.45)] backdrop-blur-xl">
+        <div className="mx-auto grid max-w-3xl grid-cols-4 gap-1">
+          {bottomTabs.map((tab) => {
+            const isActive = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`min-h-14 rounded-2xl px-1.5 py-2 text-center transition active:scale-[0.98] ${
+                  isActive
+                    ? 'bg-[#E8002D] text-white shadow-[0_0_28px_rgba(232,0,45,0.35)]'
+                    : 'bg-white/[0.04] text-[#AAAAAA]'
+                }`}
+              >
+                <span className="block text-[10px] font-black leading-tight">{tab.label}</span>
+                <span className={`mt-0.5 block text-[8px] font-black uppercase tracking-[0.12em] ${isActive ? 'text-white/75' : 'text-[#666666]'}`}>
+                  {tab.caption}
+                </span>
+              </button>
+            )
+          })}
         </div>
-      )}
+      </nav>
     </main>
   )
 }
