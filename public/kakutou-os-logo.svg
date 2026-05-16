@@ -1,0 +1,71 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" fill="none"/>
+  <circle cx="256" cy="256" r="236" fill="#050505"/>
+  <circle cx="256" cy="256" r="225" fill="url(#outerGlow)" stroke="#E5E7EB" stroke-width="4"/>
+  <circle cx="256" cy="256" r="211" fill="url(#arena)" stroke="#E8002D" stroke-width="10"/>
+  <circle cx="256" cy="256" r="184" fill="none" stroke="#171717" stroke-width="16"/>
+  <path d="M64 237C88 153 154 83 256 83C358 83 424 153 448 237C405 178 338 143 256 143C174 143 107 178 64 237Z" fill="url(#redBurst)"/>
+  <path d="M68 322C116 394 181 431 256 431C331 431 396 394 444 322H68Z" fill="#101010"/>
+  <path d="M88 322H424" stroke="#E8002D" stroke-width="18" stroke-linecap="round"/>
+  <path d="M103 343H409" stroke="#090909" stroke-width="36" stroke-linecap="round"/>
+  <path d="M142 162L370 162" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="2"/>
+  <path d="M116 206C157 181 205 168 256 168C307 168 355 181 396 206" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="3"/>
+  <path d="M256 168V275" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="3"/>
+  <path d="M256 168C230 196 215 231 211 275" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="3"/>
+  <path d="M256 168C282 196 297 231 301 275" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="3"/>
+  <path d="M164 256C197 240 227 232 256 232C285 232 315 240 348 256" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="3"/>
+  <path d="M121 210L81 192" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="7" stroke-linecap="round"/>
+  <path d="M391 210L431 192" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="7" stroke-linecap="round"/>
+  <path d="M106 236L65 229" stroke="#FFFFFF" stroke-opacity="0.4" stroke-width="7" stroke-linecap="round"/>
+  <path d="M406 236L447 229" stroke="#FFFFFF" stroke-opacity="0.4" stroke-width="7" stroke-linecap="round"/>
+  <g filter="url(#fighterShadow)">
+    <path d="M176 209C181 190 203 188 213 203C221 215 214 232 198 234C185 236 172 225 176 209Z" fill="#060606" stroke="#F8FAFC" stroke-width="5"/>
+    <path d="M198 236C224 252 238 279 234 313L190 319C180 286 168 263 145 250C156 237 175 230 198 236Z" fill="#080808" stroke="#F8FAFC" stroke-width="5"/>
+    <path d="M143 251C117 257 100 272 88 295" stroke="#080808" stroke-width="28" stroke-linecap="round"/>
+    <path d="M143 251C117 257 100 272 88 295" stroke="#F8FAFC" stroke-width="37" stroke-linecap="round" stroke-opacity="0.08"/>
+    <path d="M226 301C252 289 270 274 283 250" stroke="#080808" stroke-width="30" stroke-linecap="round"/>
+    <path d="M283 250L301 245" stroke="#E8002D" stroke-width="17" stroke-linecap="round"/>
+    <path d="M181 315C170 343 148 361 121 374" stroke="#080808" stroke-width="31" stroke-linecap="round"/>
+    <path d="M226 313C244 342 268 358 298 366" stroke="#080808" stroke-width="31" stroke-linecap="round"/>
+  </g>
+  <g filter="url(#fighterShadow)">
+    <path d="M326 206C331 187 353 185 363 200C371 212 364 229 348 231C335 233 322 222 326 206Z" fill="#060606" stroke="#F8FAFC" stroke-width="5"/>
+    <path d="M346 235C321 249 309 273 314 307L357 313C365 282 377 261 398 248C386 236 369 229 346 235Z" fill="#080808" stroke="#F8FAFC" stroke-width="5"/>
+    <path d="M398 248C423 254 440 270 452 292" stroke="#080808" stroke-width="28" stroke-linecap="round"/>
+    <path d="M315 270L292 254" stroke="#080808" stroke-width="27" stroke-linecap="round"/>
+    <path d="M292 254L275 247" stroke="#E8002D" stroke-width="17" stroke-linecap="round"/>
+    <path d="M358 314C370 341 392 359 418 371" stroke="#080808" stroke-width="31" stroke-linecap="round"/>
+    <path d="M318 308C303 338 281 357 253 367" stroke="#080808" stroke-width="31" stroke-linecap="round"/>
+  </g>
+  <g filter="url(#textGlow)">
+    <text x="256" y="98" text-anchor="middle" font-family="'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif" font-size="54" font-weight="900" fill="white" letter-spacing="8">åû±ûˆ</text>
+    <text x="256" y="378" text-anchor="middle" font-family="'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif" font-size="43" font-weight="900" fill="white"><Ø×éÃÈÕ©üà</text>
+    <rect x="165" y="397" width="182" height="34" rx="5" fill="#E8002D"/>
+    <text x="256" y="421" text-anchor="middle" font-family="Arial, sans-serif" font-size="23" font-weight="900" fill="white" letter-spacing="5">KAKUTOU OS</text>
+  </g>
+  <circle cx="256" cy="256" r="232" fill="none" stroke="#111827" stroke-width="10"/>
+  <circle cx="256" cy="256" r="218" fill="none" stroke="#E8002D" stroke-width="4"/>
+  <defs>
+    <radialGradient id="outerGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 242) rotate(90) scale(242)">
+      <stop stop-color="#290008"/>
+      <stop offset="0.58" stop-color="#0A0A0A"/>
+      <stop offset="1" stop-color="#020202"/>
+    </radialGradient>
+    <radialGradient id="arena" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 215) rotate(90) scale(215)">
+      <stop stop-color="#F43F5E" stop-opacity="0.45"/>
+      <stop offset="0.45" stop-color="#250006" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#050505"/>
+    </radialGradient>
+    <linearGradient id="redBurst" x1="256" y1="83" x2="256" y2="237" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8002D"/>
+      <stop offset="1" stop-color="#E8002D" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="fighterShadow" x="38" y="154" width="436" height="252" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000000" flood-opacity="0.75"/>
+    </filter>
+    <filter id="textGlow" x="60" y="39" width="392" height="412" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#E8002D" flood-opacity="0.75"/>
+      <feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#000000" flood-opacity="0.9"/>
+    </filter>
+  </defs>
+</svg>

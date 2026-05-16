@@ -522,9 +522,20 @@ export default function Home() {
       <div className="pointer-events-none fixed inset-x-0 top-0 h-24 border-b border-white/10 bg-[#0A0A0A]/70 backdrop-blur-xl" />
 
       <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 md:px-8">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.35em] text-[#E8002D]">Fight Oracle</p>
-          <h1 className="mt-1 text-base font-black tracking-tight text-white md:text-xl">MMA Prediction Arena</h1>
+        <div className="flex min-w-0 items-center gap-3">
+          <div
+            aria-hidden="true"
+            className="h-11 w-11 shrink-0 rounded-full border border-[#E8002D]/50 bg-black bg-cover bg-center shadow-[0_0_24px_rgba(232,0,45,0.35)] md:h-14 md:w-14"
+            style={{ backgroundImage: 'url(/kakutou-os-logo.svg)' }}
+          />
+          <div className="min-w-0">
+            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#E8002D] md:tracking-[0.35em]">
+              Kakutou OS
+            </p>
+            <h1 className="mt-1 truncate text-base font-black tracking-tight text-white md:text-xl">
+              MMA Prediction Arena
+            </h1>
+          </div>
         </div>
 
         {user ? (

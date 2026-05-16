@@ -15,6 +15,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Fight Oracle | MMA Prediction Arena",
   description: "MMAの試合前体験を熱狂に変える勝敗予想プラットフォーム",
+  icons: {
+    icon: "/kakutou-os-logo.svg",
+    apple: "/kakutou-os-logo.svg",
+  },
 };
 
 export default function RootLayout({
