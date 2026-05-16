@@ -70,6 +70,7 @@ export default function AdminPage() {
   const [matchForm, setMatchForm] = useState<MatchFormValues>(emptyMatchForm)
   const [loading, setLoading] = useState(true)
   const [savingTarget, setSavingTarget] = useState<'event' | 'match' | null>(null)
+  const [importingRizin, setImportingRizin] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
   const loadAdminData = useCallback(async () => {
@@ -183,6 +184,36 @@ export default function AdminPage() {
     }
   }
 
+  const importRizinFighters = async () => {
+    setImportingRizin(true)
+    setMessage(null)
+    try {
+      const response = await fetch('/api/admin/import-rizin-fighters', { method: 'POST' })
+      const result = (await response.json()) as {
+        ok?: boolean
+        imported?: number
+        inserted?: number
+        updated?: number
+        message?: string
+      }
+
+      if (!response.ok || !result.ok) {
+        throw new Error(result.message ?? 'RIZIN import failed')
+      }
+
+      setMessage(
+        `RIZIN公式から${result.imported ?? 0}名を取得しました。追加: ${result.inserted ?? 0} / 更新: ${
+          result.updated ?? 0
+        }`,
+      )
+      await loadAdminData()
+    } catch (error) {
+      setMessage(`RIZIN公式インポートに失敗しました: ${getErrorMessage(error)}`)
+    } finally {
+      setImportingRizin(false)
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#0A0A0A] px-4 py-6 text-white md:px-8 md:py-10">
       <div className="mx-auto max-w-6xl">
@@ -208,6 +239,26 @@ export default function AdminPage() {
             {message}
           </div>
         )}
+
+        <section className="mb-6 rounded-[2rem] border border-[#E8002D]/25 bg-[radial-gradient(circle_at_0%_0%,rgba(232,0,45,0.22),rgba(20,20,20,0.92)_44%)] p-5">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8002D]">RIZIN crawler</p>
+              <h2 className="mt-1 text-2xl font-black text-white">公式選手データ一括取得</h2>
+              <p className="mt-2 text-sm leading-6 text-[#AAAAAA]">
+                RIZIN公式MMA選手一覧から、選手名・写真・階級推定・プロフィール情報を取得してfightersへ反映します。
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={importRizinFighters}
+              disabled={importingRizin}
+              className="min-h-14 rounded-2xl bg-[#E8002D] px-5 py-4 text-sm font-black text-white shadow-[0_18px_44px_rgba(232,0,45,0.28)] transition active:scale-[0.98] disabled:opacity-50"
+            >
+              {importingRizin ? '取得中...' : 'RIZIN公式から選手データを一括取得'}
+            </button>
+          </div>
+        </section>
 
         {loading ? (
           <div className="rounded-[2rem] border border-white/10 bg-[#141414] p-10 text-center text-sm font-bold text-[#AAAAAA]">

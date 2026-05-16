@@ -15,6 +15,19 @@ export interface Fighter {
   durability: number
   iq: number
   power: number
+  birthplace?: string | null
+  birth_date?: string | null
+  height?: string | null
+  weight?: string | null
+  affiliation?: string | null
+  twitter_url?: string | null
+  instagram_url?: string | null
+  youtube_url?: string | null
+  description?: string | null
+  submission?: number | null
+  stamina?: number | null
+  speed?: number | null
+  defense?: number | null
   created_at?: string
 }
 
