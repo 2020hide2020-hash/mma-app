@@ -15,12 +15,15 @@ export interface Fighter {
   durability: number
   iq: number
   power: number
+  created_at?: string
 }
 
 export interface Event {
   id: number
   name: string
   event_date: string
+  logo_url?: string | null
+  created_at?: string
 }
 
 export interface Match {
@@ -29,8 +32,28 @@ export interface Match {
   fighter1_id: number
   fighter2_id: number
   youtube_id: string | null
+  bout_order?: number | null
+  is_main_card?: boolean | null
+  created_at?: string
   fighter1: Fighter
   fighter2: Fighter
+}
+
+export interface EventFormValues {
+  id?: number
+  name: string
+  event_date: string
+  logo_url: string
+}
+
+export interface MatchFormValues {
+  id?: number
+  event_id: number | ''
+  fighter1_id: number | ''
+  fighter2_id: number | ''
+  youtube_id: string
+  bout_order: number | ''
+  is_main_card: boolean
 }
 
 export interface PredictionRow {

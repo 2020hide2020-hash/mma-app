@@ -113,7 +113,9 @@ export default function Home() {
         if (matchesError) throw matchesError
 
         if (matchesData && matchesData.length > 0) {
-          const typedMatches = matchesData as unknown as Match[]
+          const typedMatches = (matchesData as unknown as Match[])
+            .filter((match) => match.fighter1 && match.fighter2)
+            .sort((a, b) => (a.bout_order ?? a.id) - (b.bout_order ?? b.id))
           setMatches(typedMatches)
           setSelectedMatch(typedMatches[0])
         } else {
