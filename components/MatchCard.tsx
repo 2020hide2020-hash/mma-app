@@ -2,24 +2,7 @@
 
 import type { ReactNode } from 'react'
 import Link from 'next/link'
-
-interface Fighter {
-  id: number
-  name: string
-  image_url: string | null
-  organization: string | null
-  weight_class: string | null
-  gym: string | null
-  record: string | null
-  base_style: string | null
-  style_tags: string[] | null
-}
-
-interface Match {
-  id: number
-  fighter1: Fighter
-  fighter2: Fighter
-}
+import type { Fighter, Match } from '@/types'
 
 interface MatchCardProps {
   match: Match

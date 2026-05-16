@@ -1,35 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@supabase/supabase-js'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+import { supabase } from '@/lib/supabase'
+import type { Fighter } from '@/types'
 
 const getErrorMessage = (error: unknown) => {
   return error instanceof Error ? error.message : '不明なエラーが発生しました'
-}
-
-interface Fighter {
-  id: number
-  name: string
-  image_url: string
-  organization: string
-  weight_class: string
-  gym: string
-  record: string
-  base_style: string
-  style_tags: string[]
-  striking: number
-  wrestling: number
-  grappling: number
-  cardio: number
-  durability: number
-  iq: number
-  power: number
 }
 
 export default function FighterProfile() {

@@ -1,61 +1,11 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { createClient, type User } from '@supabase/supabase-js'
+import type { User } from '@supabase/supabase-js'
 import Link from 'next/link'
 import MatchCard from '@/components/MatchCard'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-interface Fighter {
-  id: number
-  name: string
-  image_url: string | null
-  organization: string | null
-  weight_class: string | null
-  gym: string | null
-  record: string | null
-  base_style: string | null
-  style_tags: string[] | null
-  striking: number
-  wrestling: number
-  grappling: number
-  cardio: number
-  durability: number
-  iq: number
-  power: number
-}
-
-interface Event {
-  id: number
-  name: string
-  event_date: string
-}
-
-interface Match {
-  id: number
-  event_id: number
-  fighter1_id: number
-  fighter2_id: number
-  youtube_id: string | null
-  fighter1: Fighter
-  fighter2: Fighter
-}
-
-interface PredictionRow {
-  winner_fighter_id: number
-  user_id: string
-}
-
-type ActiveTab = 'prediction' | 'fighters' | 'articles' | 'mypage'
-
-type VoteEffect = {
-  fighterName: string
-  side: 'left' | 'right'
-  nonce: number
-}
+import { supabase } from '@/lib/supabase'
+import type { ActiveTab, Event, Fighter, Match, PredictionRow, VoteEffect } from '@/types'
 
 const bottomTabs: Array<{
   id: ActiveTab

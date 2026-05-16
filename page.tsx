@@ -1,12 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@supabase/supabase-js'
-
-// Supabase接続設定
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+import { supabase } from '@/lib/supabase'
 
 const getErrorMessage = (error: unknown) => {
   return error instanceof Error ? error.message : '不明なエラーが発生しました'
