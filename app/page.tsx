@@ -526,7 +526,7 @@ export default function Home() {
           <div
             aria-hidden="true"
             className="h-11 w-11 shrink-0 rounded-full border border-[#E8002D]/50 bg-black bg-cover bg-center shadow-[0_0_24px_rgba(232,0,45,0.35)] md:h-14 md:w-14"
-            style={{ backgroundImage: 'url(/kakutou-os-logo.svg)' }}
+            style={{ backgroundImage: 'url(/brand/logo.png)' }}
           />
           <div className="min-w-0">
             <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#E8002D] md:tracking-[0.35em]">
