@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { createClient, type User } from '@supabase/supabase-js'
 import Link from 'next/link'
+import MatchCard from '@/components/MatchCard'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
@@ -69,10 +70,6 @@ const bottomTabs: Array<{
 
 const getErrorMessage = (error: unknown) => {
   return error instanceof Error ? error.message : '不明なエラーが発生しました'
-}
-
-const getFighterMeta = (fighter: Fighter) => {
-  return [fighter.weight_class, fighter.record].filter(Boolean).join(' / ') || 'FIGHTER DATA'
 }
 
 const getAvatarStyle = (imageUrl: string | null) => {
@@ -497,46 +494,6 @@ export default function Home() {
     )
   }
 
-  const renderHeroFighterCard = (fighter: Fighter, side: 'left' | 'right') => (
-    <Link
-      href={`/fighters/${fighter.id}`}
-      className="group relative min-h-[228px] min-w-0 overflow-hidden rounded-[1.15rem] border border-white/10 bg-[#242424] bg-cover bg-center p-2.5 transition hover:border-[#E8002D]/60 active:scale-[0.99] md:min-h-[360px] md:rounded-[1.4rem] md:p-5"
-      style={getAvatarStyle(fighter.image_url)}
-    >
-      {!fighter.image_url && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle,rgba(232,0,45,0.22),rgba(20,20,20,0.95))] text-6xl font-black text-white/15 md:text-7xl">
-          {fighter.name.slice(0, 1)}
-        </div>
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-black/15" />
-      <div className={`relative flex h-full flex-col justify-end ${side === 'right' ? 'items-end text-right' : ''}`}>
-        <p
-          className={`text-[9px] font-black uppercase tracking-[0.18em] md:text-[10px] md:tracking-[0.22em] ${
-            side === 'left' ? 'text-[#8AA8FF]' : 'text-[#FF6B7F]'
-          }`}
-        >
-          {side === 'left' ? 'Blue corner' : 'Red corner'}
-        </p>
-        <h4 className="mt-1 max-w-full break-words text-[clamp(1rem,4.7vw,1.42rem)] font-black leading-[0.98] tracking-[-0.05em] text-white [display:-webkit-box] [overflow-wrap:anywhere] [-webkit-box-orient:vertical] [-webkit-line-clamp:3] md:mt-2 md:text-5xl md:[-webkit-line-clamp:4]">
-          {fighter.name}
-        </h4>
-        <p className="mt-2 max-w-full text-[9px] font-bold leading-snug text-[#C8C8C8] [display:-webkit-box] [overflow-wrap:anywhere] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] md:mt-3 md:text-sm">
-          {getFighterMeta(fighter)}
-        </p>
-        <div className={`mt-2 flex max-w-full flex-wrap gap-1 ${side === 'right' ? 'justify-end' : ''} md:mt-4 md:gap-1.5`}>
-          {(fighter.style_tags ?? []).slice(0, 2).map((tag) => (
-            <span
-              key={tag}
-              className="hidden max-w-full truncate rounded-full border border-white/10 bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-white/80 min-[390px]:inline-block md:px-2 md:py-1 md:text-[10px]"
-            >
-              #{tag}
-            </span>
-          ))}
-        </div>
-      </div>
-    </Link>
-  )
-
   const renderVoteEffect = () => {
     if (!voteEffect) return null
 
@@ -649,62 +606,14 @@ export default function Home() {
 
         {activeTab === 'prediction' && (selectedMatch ? (
           <>
-            <section className="mt-8 rounded-[2rem] border border-white/10 bg-[#141414]/90 p-3 shadow-[0_30px_120px_rgba(0,0,0,0.45)] md:mt-12 md:p-5">
-              <div className="rounded-[1.65rem] border border-[#E8002D]/25 bg-[linear-gradient(135deg,rgba(232,0,45,0.18),rgba(36,36,36,0.72)_42%,rgba(10,10,10,0.96))] p-4 md:p-8">
-                <div className="mb-5 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#FF6B7F]">Main prediction</p>
-                    <h3 className="mt-1 text-lg font-black text-white md:text-2xl">{currentEvent.name}</h3>
-                  </div>
-                  <div className="rounded-full border border-[#E8002D]/30 bg-[#E8002D]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#FF6B7F]">
-                    Live odds
-                  </div>
-                </div>
-
-                <div className="relative grid grid-cols-2 items-stretch gap-2 md:gap-6">
-                  {renderHeroFighterCard(selectedMatch.fighter1, 'left')}
-
-                  {renderHeroFighterCard(selectedMatch.fighter2, 'right')}
-
-                  <div className="pointer-events-none absolute inset-y-0 left-1/2 z-10 flex -translate-x-1/2 items-center">
-                    <span className="rounded-full border border-white/20 bg-black/95 px-2.5 py-3 text-[11px] font-black text-[#E8002D] shadow-[0_0_36px_rgba(232,0,45,0.45)] md:px-4 md:py-5 md:text-lg">
-                      VS
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-5 rounded-[1.4rem] border border-white/10 bg-black/55 p-4 md:p-5">
-                  <div className="mb-3 flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#666666]">Fan prediction</p>
-                      <p className="mt-1 text-sm font-black text-white">今のファン世論</p>
-                    </div>
-                    <p className="text-xs font-bold text-[#AAAAAA]">総予想 {totalVotes}票</p>
-                  </div>
-
-                  <div className="mb-3 grid grid-cols-2 gap-3 text-xs font-black">
-                    <p className="text-[#8AA8FF]">
-                      {selectedMatch.fighter1.name} {percentF1}%
-                    </p>
-                    <p className="text-right text-[#FF6B7F]">
-                      {selectedMatch.fighter2.name} {percentF2}%
-                    </p>
-                  </div>
-                  <div className="flex h-5 overflow-hidden rounded-full bg-[#242424] ring-1 ring-white/10">
-                    <div
-                      className="bg-gradient-to-r from-[#1D4ED8] to-[#60A5FA] transition-all duration-500"
-                      style={{ width: `${percentF1}%` }}
-                    />
-                    <div
-                      className="bg-gradient-to-r from-[#FB7185] to-[#E8002D] transition-all duration-500"
-                      style={{ width: `${percentF2}%` }}
-                    />
-                  </div>
-
-                  <div className="mt-5">{renderVoteActions()}</div>
-                </div>
-              </div>
-            </section>
+            <MatchCard
+              match={selectedMatch}
+              eventName={currentEvent.name}
+              totalVotes={totalVotes}
+              percentF1={percentF1}
+              percentF2={percentF2}
+              actionSlot={renderVoteActions()}
+            />
 
             <section className="mt-8">
               <div className="mb-4 flex items-center justify-between">
