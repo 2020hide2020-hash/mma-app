@@ -186,6 +186,8 @@ export default function Home() {
 
   useEffect(() => {
     if (selectedMatch) {
+      // Supabase is the external source of truth for live prediction counts.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchPredictions(selectedMatch, user)
     }
   }, [fetchPredictions, selectedMatch, user])

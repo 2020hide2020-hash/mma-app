@@ -2,12 +2,16 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+const getErrorMessage = (error: unknown) => {
+  return error instanceof Error ? error.message : '不明なエラーが発生しました'
+}
 
 interface Fighter {
   id: number
@@ -30,7 +34,6 @@ interface Fighter {
 
 export default function FighterProfile() {
   const params = useParams()
-  const router = useRouter()
   const [fighter, setFighter] = useState<Fighter | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -48,8 +51,8 @@ export default function FighterProfile() {
         if (data) {
           setFighter(data as Fighter)
         }
-      } catch (error: any) {
-        console.error('選手データ取得失敗:', error.message)
+      } catch (error) {
+        console.error('選手データ取得失敗:', getErrorMessage(error))
       } finally {
         setLoading(false)
       }
@@ -149,10 +152,11 @@ export default function FighterProfile() {
         <div className="bg-slate-900 rounded-3xl border border-slate-900 p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-8 items-center mb-8">
           <div className="flex flex-col items-center">
             {fighter.image_url ? (
-              <img
-                src={fighter.image_url}
-                alt={fighter.name}
-                className="w-40 h-40 rounded-full object-cover border-4 border-slate-700 shadow-2xl"
+              <div
+                role="img"
+                aria-label={fighter.name}
+                className="w-40 h-40 rounded-full bg-cover bg-center border-4 border-slate-700 shadow-2xl"
+                style={{ backgroundImage: `url(${fighter.image_url})` }}
               />
             ) : (
               <div className="w-40 h-40 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 border-4 border-slate-700">No Image</div>
