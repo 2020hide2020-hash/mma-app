@@ -50,6 +50,12 @@ interface PredictionRow {
 
 type ActiveTab = 'prediction' | 'fighters' | 'articles' | 'mypage'
 
+type VoteEffect = {
+  fighterName: string
+  side: 'left' | 'right'
+  nonce: number
+}
+
 const bottomTabs: Array<{
   id: ActiveTab
   label: string
@@ -90,6 +96,7 @@ export default function Home() {
   const [isVoting, setIsVoting] = useState(false)
   const [activeTab, setActiveTab] = useState<ActiveTab>('prediction')
   const [fighterSearch, setFighterSearch] = useState('')
+  const [voteEffect, setVoteEffect] = useState<VoteEffect | null>(null)
 
   useEffect(() => {
     const getSession = async () => {
@@ -207,6 +214,16 @@ export default function Home() {
     }
   }, [fetchPredictions, selectedMatch, user])
 
+  useEffect(() => {
+    if (!voteEffect) return
+
+    const timer = window.setTimeout(() => {
+      setVoteEffect(null)
+    }, 1800)
+
+    return () => window.clearTimeout(timer)
+  }, [voteEffect])
+
   const handleLogin = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -235,8 +252,12 @@ export default function Home() {
 
       if (error) throw error
 
+      setVoteEffect((currentEffect) => ({
+        fighterName,
+        side: fighterId === selectedMatch.fighter1.id ? 'left' : 'right',
+        nonce: (currentEffect?.nonce ?? 0) + 1,
+      }))
       await fetchPredictions(selectedMatch, user)
-      alert(`${fighterName} の勝利予想を登録しました。`)
     } catch (error) {
       alert('投票に失敗しました: ' + getErrorMessage(error))
     } finally {
@@ -515,6 +536,35 @@ export default function Home() {
       </div>
     </Link>
   )
+
+  const renderVoteEffect = () => {
+    if (!voteEffect) return null
+
+    return (
+      <div
+        key={voteEffect.nonce}
+        className="vote-ko-overlay pointer-events-none fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black/72 px-6 backdrop-blur-sm"
+        aria-hidden="true"
+      >
+        <div className={`vote-ko-hit ${voteEffect.side === 'right' ? 'vote-ko-hit-right' : ''}`} />
+        <div className="vote-ko-ring" />
+        <div className="vote-ko-ring vote-ko-ring-delay" />
+        <div className="vote-ko-slash vote-ko-slash-a" />
+        <div className="vote-ko-slash vote-ko-slash-b" />
+        <div className="vote-ko-card relative w-full max-w-sm rounded-[2rem] border border-[#E8002D]/50 bg-[radial-gradient(circle_at_50%_0%,rgba(232,0,45,0.42),rgba(10,10,10,0.94)_58%)] p-6 text-center shadow-[0_0_90px_rgba(232,0,45,0.42)]">
+          <div className="vote-ko-burst mx-auto flex h-24 w-24 items-center justify-center rounded-full border border-white/20 bg-black shadow-[0_0_50px_rgba(232,0,45,0.5)]">
+            <span className="vote-ko-fist text-5xl">●</span>
+          </div>
+          <p className="mt-5 text-[11px] font-black uppercase tracking-[0.42em] text-[#FF6B7F]">Prediction locked</p>
+          <h2 className="vote-ko-title mt-2 text-5xl font-black tracking-[-0.08em] text-white">投票完了</h2>
+          <p className="mt-3 text-base font-black text-white">
+            <span className="text-[#FF445F]">{voteEffect.fighterName}</span>
+            <span className="block text-xs font-bold uppercase tracking-[0.25em] text-white/65">wins your pick</span>
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#0A0A0A] pb-28 text-[#F5F5F5] md:pb-0">
@@ -888,6 +938,8 @@ export default function Home() {
           </section>
         )}
       </div>
+
+      {renderVoteEffect()}
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[#0A0A0A]/94 px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 shadow-[0_-18px_42px_rgba(0,0,0,0.45)] backdrop-blur-xl">
         <div className="mx-auto grid max-w-3xl grid-cols-4 gap-1">
