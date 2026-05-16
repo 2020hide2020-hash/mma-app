@@ -1,12 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 
-// Supabase接続設定
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+const getErrorMessage = (error: unknown) => {
+  return error instanceof Error ? error.message : '不明なエラーが発生しました'
+}
 
 export default function Home() {
   const [votes, setVotes] = useState({ mikuru: 0, ren: 0 })
@@ -31,14 +30,16 @@ export default function Home() {
         const renCount = data.filter(v => v.voted_for === '平本蓮').length
         setVotes({ mikuru: mikuruCount, ren: renCount })
       }
-    } catch (error: any) {
-      console.error('データ取得エラー:', error.message)
+    } catch (error) {
+      console.error('データ取得エラー:', getErrorMessage(error))
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
+    // Supabase vote counts are loaded on the client for this legacy page.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchVotes()
   }, [])
 
@@ -54,8 +55,8 @@ export default function Home() {
 
       alert(`${candidate} に投票しました！`)
       await fetchVotes() // 票数を再取得
-    } catch (error: any) {
-      alert('投票に失敗しました: ' + error.message)
+    } catch (error) {
+      alert('投票に失敗しました: ' + getErrorMessage(error))
     } finally {
       setIsVoting(false)
     }
