@@ -37,24 +37,19 @@ const getInitialRadarValues = (fighter: Fighter): RadarValues => ({
 })
 
 const profileItems = (fighter: Fighter) => [
+  { label: '名前', value: fighter.name },
   { label: '出身', value: fighter.birthplace },
   { label: '生年月日', value: fighter.birth_date },
   { label: '身長', value: fighter.height },
   { label: '体重', value: fighter.weight },
   { label: '所属', value: fighter.affiliation || fighter.gym },
   { label: '階級', value: fighter.weight_class },
-]
-
-const snsLinks = (fighter: Fighter) => [
-  { label: 'X', href: fighter.twitter_url },
-  { label: 'IG', href: fighter.instagram_url },
-  { label: 'YT', href: fighter.youtube_url },
+  { label: 'スタイル', value: fighter.base_style },
 ]
 
 export default function FighterProfile() {
   const params = useParams()
   const [fighter, setFighter] = useState<Fighter | null>(null)
-  const [radarValues, setRadarValues] = useState<RadarValues | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -67,7 +62,6 @@ export default function FighterProfile() {
         if (data) {
           const typedFighter = data as Fighter
           setFighter(typedFighter)
-          setRadarValues(getInitialRadarValues(typedFighter))
         }
       } catch (error) {
         console.error('選手データ取得失敗:', getErrorMessage(error))
@@ -79,7 +73,9 @@ export default function FighterProfile() {
   }, [params?.id])
 
   const radarStats = useMemo<RadarStat[]>(() => {
-    if (!radarValues) return []
+    if (!fighter) return []
+
+    const radarValues = getInitialRadarValues(fighter)
 
     return [
       { key: 'striking', label: '打撃', value: radarValues.striking },
@@ -90,7 +86,20 @@ export default function FighterProfile() {
       { key: 'stamina', label: '持久', value: radarValues.stamina },
       { key: 'defense', label: '防御', value: radarValues.defense },
     ]
-  }, [radarValues])
+  }, [fighter])
+
+  const storyParagraphs = useMemo(() => {
+    if (!fighter?.description) {
+      return [
+        '公式プロフィールの詳細テキストは未登録です。RIZIN公式インポートまたは管理画面から経歴を追加すると、ここに格闘技メディア風のストーリーとして表示されます。',
+      ]
+    }
+
+    return fighter.description
+      .split(/(?<=。)|\n+/)
+      .map((paragraph) => paragraph.trim())
+      .filter(Boolean)
+  }, [fighter])
 
   const renderRadarChart = () => {
     const size = 270
@@ -166,7 +175,7 @@ export default function FighterProfile() {
     )
   }
 
-  if (!fighter || !radarValues) {
+  if (!fighter) {
     return (
       <main className="min-h-screen bg-[#0A0A0A] text-white flex flex-col items-center justify-center p-6">
         <p className="text-xl font-bold text-red-400">選手データが見つかりませんでした。</p>
@@ -222,31 +231,15 @@ export default function FighterProfile() {
                 ))}
               </div>
 
-              <div className="mt-5 grid grid-cols-3 gap-3">
-                {snsLinks(fighter).map((sns) => (
-                  <a
-                    key={sns.label}
-                    href={sns.href || '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-disabled={!sns.href}
-                    className={`min-h-14 rounded-2xl border px-4 py-3 text-center text-sm font-black transition active:scale-[0.98] ${
-                      sns.href
-                        ? 'border-[#E8002D]/35 bg-[#E8002D]/12 text-white'
-                        : 'pointer-events-none border-white/10 bg-white/5 text-[#666666]'
-                    }`}
-                  >
-                    {sns.label}
-                  </a>
-                ))}
-              </div>
-
               <div className="mt-5 rounded-3xl border border-white/10 bg-black/40 p-5">
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8002D]">Story</p>
-                <p className="mt-3 text-sm leading-7 text-[#D4D4D4]">
-                  {fighter.description ||
-                    '公式プロフィールの詳細テキストは未登録です。RIZIN公式インポートまたは管理画面から経歴を追加すると、ここに格闘技メディア風のストーリーとして表示されます。'}
-                </p>
+                <div className="mt-5">
+                  {storyParagraphs.map((paragraph, index) => (
+                    <p key={`${paragraph}-${index}`} className="mb-6 text-base leading-relaxed text-gray-300 last:mb-0">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -254,10 +247,10 @@ export default function FighterProfile() {
 
         <section className="mt-6 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
           <div className="rounded-[2rem] border border-white/10 bg-[#141414] p-5 md:p-6">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8002D]">Interactive radar</p>
-            <h2 className="mt-1 text-2xl font-black text-white">能力値シミュレーション</h2>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8002D]">Fighter parameters</p>
+            <h2 className="mt-1 text-2xl font-black text-white">固定パラメータ</h2>
             <p className="mt-2 text-sm leading-6 text-[#AAAAAA]">
-              スライダーを動かすと、DBを更新せずにこの画面上のレーダーチャートだけがリアルタイムで変化します。
+              管理画面で登録された数値を読み取り専用で表示します。比較の起点として、現在の能力バランスを確認できます。
             </p>
             <div className="mt-5">{renderRadarChart()}</div>
           </div>
@@ -265,26 +258,17 @@ export default function FighterProfile() {
           <div className="rounded-[2rem] border border-white/10 bg-[#141414] p-5 md:p-6">
             <div className="grid gap-4">
               {radarStats.map((stat) => (
-                <label key={stat.key} className="rounded-3xl border border-white/10 bg-black/40 p-4">
+                <div key={stat.key} className="rounded-3xl border border-white/10 bg-black/40 p-4">
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <span className="text-sm font-black text-white">{stat.label}</span>
                     <span className="rounded-full bg-[#E8002D]/15 px-3 py-1 text-xs font-black text-[#FF6B7F]">
                       {stat.value}
                     </span>
                   </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={stat.value}
-                    onChange={(event) =>
-                      setRadarValues((current) =>
-                        current ? { ...current, [stat.key]: Number(event.target.value) } : current,
-                      )
-                    }
-                    className="w-full accent-[#E8002D]"
-                  />
-                </label>
+                  <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                    <div className="h-full rounded-full bg-[#E8002D]" style={{ width: `${stat.value}%` }} />
+                  </div>
+                </div>
               ))}
             </div>
           </div>

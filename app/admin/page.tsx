@@ -71,6 +71,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [savingTarget, setSavingTarget] = useState<'event' | 'match' | null>(null)
   const [importingRizin, setImportingRizin] = useState(false)
+  const [fighterImportUrl, setFighterImportUrl] = useState('')
+  const [importingFighterUrl, setImportingFighterUrl] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
   const loadAdminData = useCallback(async () => {
@@ -214,6 +216,31 @@ export default function AdminPage() {
     }
   }
 
+  const importFighterFromUrl = async () => {
+    setImportingFighterUrl(true)
+    setMessage(null)
+    try {
+      const response = await fetch('/api/admin/import-fighter-url', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ url: fighterImportUrl }),
+      })
+      const result = (await response.json()) as { ok?: boolean; name?: string; updated?: boolean; message?: string }
+
+      if (!response.ok || !result.ok) {
+        throw new Error(result.message ?? 'URL import failed')
+      }
+
+      setMessage(`${result.name ?? '選手'} を${result.updated ? '更新' : '追加'}しました。`)
+      setFighterImportUrl('')
+      await loadAdminData()
+    } catch (error) {
+      setMessage(`個別URLインポートに失敗しました: ${getErrorMessage(error)}`)
+    } finally {
+      setImportingFighterUrl(false)
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#0A0A0A] px-4 py-6 text-white md:px-8 md:py-10">
       <div className="mx-auto max-w-6xl">
@@ -241,22 +268,48 @@ export default function AdminPage() {
         )}
 
         <section className="mb-6 rounded-[2rem] border border-[#E8002D]/25 bg-[radial-gradient(circle_at_0%_0%,rgba(232,0,45,0.22),rgba(20,20,20,0.92)_44%)] p-5">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8002D]">RIZIN crawler</p>
-              <h2 className="mt-1 text-2xl font-black text-white">公式選手データ一括取得</h2>
-              <p className="mt-2 text-sm leading-6 text-[#AAAAAA]">
-                RIZIN公式MMA選手一覧から、選手名・写真・階級推定・プロフィール情報を取得してfightersへ反映します。
-              </p>
+          <div className="grid gap-5">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8002D]">RIZIN crawler</p>
+                <h2 className="mt-1 text-2xl font-black text-white">公式選手データ一括取得</h2>
+                <p className="mt-2 text-sm leading-6 text-[#AAAAAA]">
+                  RIZIN公式MMA選手一覧から、選手名・写真・階級推定・プロフィール情報を取得してfightersへ反映します。
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={importRizinFighters}
+                disabled={importingRizin}
+                className="min-h-14 rounded-2xl bg-[#E8002D] px-5 py-4 text-sm font-black text-white shadow-[0_18px_44px_rgba(232,0,45,0.28)] transition active:scale-[0.98] disabled:opacity-50"
+              >
+                {importingRizin ? '取得中...' : 'RIZIN公式から選手データを一括取得'}
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={importRizinFighters}
-              disabled={importingRizin}
-              className="min-h-14 rounded-2xl bg-[#E8002D] px-5 py-4 text-sm font-black text-white shadow-[0_18px_44px_rgba(232,0,45,0.28)] transition active:scale-[0.98] disabled:opacity-50"
-            >
-              {importingRizin ? '取得中...' : 'RIZIN公式から選手データを一括取得'}
-            </button>
+
+            <div className="rounded-3xl border border-white/10 bg-black/40 p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8002D]">Single URL import</p>
+              <h3 className="mt-1 text-xl font-black text-white">選手ページURLから取得</h3>
+              <p className="mt-2 text-sm leading-6 text-[#AAAAAA]">
+                RIZINの選手個別ページURLを貼ると、名前・写真・プロフィール・経歴を抽出してfightersに保存します。
+              </p>
+              <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
+                <input
+                  value={fighterImportUrl}
+                  onChange={(event) => setFighterImportUrl(event.target.value)}
+                  placeholder="https://jp.rizinff.com/_tags/青木真也"
+                  className="min-h-14 rounded-2xl border border-white/10 bg-black/60 px-4 text-sm font-bold text-white outline-none placeholder:text-[#666666] focus:border-[#E8002D]"
+                />
+                <button
+                  type="button"
+                  onClick={importFighterFromUrl}
+                  disabled={importingFighterUrl || !fighterImportUrl.trim()}
+                  className="min-h-14 rounded-2xl border border-[#E8002D]/35 bg-[#E8002D]/15 px-5 py-4 text-sm font-black text-white transition active:scale-[0.98] disabled:opacity-50"
+                >
+                  {importingFighterUrl ? '保存中...' : 'データを取得して保存'}
+                </button>
+              </div>
+            </div>
           </div>
         </section>
 
