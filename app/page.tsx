@@ -347,6 +347,36 @@ export default function Home() {
     )
   }
 
+  const renderCompactStats = (fighter: Fighter, color: string) => {
+    const stats = [
+      { label: '打撃', val: fighter.striking },
+      { label: 'KO', val: fighter.power },
+      { label: '組み', val: fighter.wrestling },
+      { label: '寝技', val: fighter.grappling },
+      { label: '持久', val: fighter.cardio },
+      { label: '耐久', val: fighter.durability },
+      { label: 'IQ', val: fighter.iq },
+    ]
+
+    return (
+      <div className="space-y-2">
+        {stats.map((stat) => (
+          <div key={stat.label}>
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <span className="text-[10px] font-black text-[#AAAAAA]">{stat.label}</span>
+              <span className="text-[10px] font-black" style={{ color }}>
+                {stat.val}
+              </span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+              <div className="h-full rounded-full" style={{ width: `${stat.val}%`, backgroundColor: color }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <main className="min-h-screen bg-[#0A0A0A] text-white">
@@ -449,7 +479,7 @@ export default function Home() {
   const renderHeroFighterCard = (fighter: Fighter, side: 'left' | 'right') => (
     <Link
       href={`/fighters/${fighter.id}`}
-      className="group relative min-h-[216px] min-w-0 overflow-hidden rounded-[1.2rem] border border-white/10 bg-[#242424] bg-cover bg-center p-2.5 transition hover:border-[#E8002D]/60 active:scale-[0.99] md:min-h-[360px] md:rounded-[1.4rem] md:p-5"
+      className="group relative min-h-[228px] min-w-0 overflow-hidden rounded-[1.15rem] border border-white/10 bg-[#242424] bg-cover bg-center p-2.5 transition hover:border-[#E8002D]/60 active:scale-[0.99] md:min-h-[360px] md:rounded-[1.4rem] md:p-5"
       style={getAvatarStyle(fighter.image_url)}
     >
       {!fighter.image_url && (
@@ -466,17 +496,17 @@ export default function Home() {
         >
           {side === 'left' ? 'Blue corner' : 'Red corner'}
         </p>
-        <h4 className="mt-1 max-w-full break-words text-[clamp(1.12rem,5.4vw,1.72rem)] font-black leading-[0.95] tracking-[-0.05em] text-white [overflow-wrap:anywhere] md:mt-2 md:text-5xl">
+        <h4 className="mt-1 max-w-full break-words text-[clamp(1rem,4.7vw,1.42rem)] font-black leading-[0.98] tracking-[-0.05em] text-white [display:-webkit-box] [overflow-wrap:anywhere] [-webkit-box-orient:vertical] [-webkit-line-clamp:3] md:mt-2 md:text-5xl md:[-webkit-line-clamp:4]">
           {fighter.name}
         </h4>
-        <p className="mt-2 max-w-full text-[10px] font-bold leading-snug text-[#C8C8C8] md:mt-3 md:text-sm">
+        <p className="mt-2 max-w-full text-[9px] font-bold leading-snug text-[#C8C8C8] [display:-webkit-box] [overflow-wrap:anywhere] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] md:mt-3 md:text-sm">
           {getFighterMeta(fighter)}
         </p>
-        <div className={`mt-3 flex max-w-full flex-wrap gap-1 ${side === 'right' ? 'justify-end' : ''} md:mt-4 md:gap-1.5`}>
+        <div className={`mt-2 flex max-w-full flex-wrap gap-1 ${side === 'right' ? 'justify-end' : ''} md:mt-4 md:gap-1.5`}>
           {(fighter.style_tags ?? []).slice(0, 2).map((tag) => (
             <span
               key={tag}
-              className="max-w-full truncate rounded-full border border-white/10 bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-white/80 md:px-2 md:py-1 md:text-[10px]"
+              className="hidden max-w-full truncate rounded-full border border-white/10 bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-white/80 min-[390px]:inline-block md:px-2 md:py-1 md:text-[10px]"
             >
               #{tag}
             </span>
@@ -570,16 +600,16 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-[minmax(0,1fr)_38px_minmax(0,1fr)] items-stretch gap-2 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-6">
+                <div className="relative grid grid-cols-2 items-stretch gap-2 md:gap-6">
                   {renderHeroFighterCard(selectedMatch.fighter1, 'left')}
 
-                  <div className="flex min-w-0 flex-col items-center justify-center">
-                    <span className="rounded-full border border-white/15 bg-black px-2 py-3 text-[11px] font-black text-[#E8002D] shadow-[0_0_36px_rgba(232,0,45,0.35)] md:px-4 md:py-5 md:text-lg">
+                  {renderHeroFighterCard(selectedMatch.fighter2, 'right')}
+
+                  <div className="pointer-events-none absolute inset-y-0 left-1/2 z-10 flex -translate-x-1/2 items-center">
+                    <span className="rounded-full border border-white/20 bg-black/95 px-2.5 py-3 text-[11px] font-black text-[#E8002D] shadow-[0_0_36px_rgba(232,0,45,0.45)] md:px-4 md:py-5 md:text-lg">
                       VS
                     </span>
                   </div>
-
-                  {renderHeroFighterCard(selectedMatch.fighter2, 'right')}
                 </div>
 
                 <div className="mt-5 rounded-[1.4rem] border border-white/10 bg-black/55 p-4 md:p-5">
@@ -669,7 +699,7 @@ export default function Home() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 md:gap-4">
+                <div className="grid grid-cols-2 gap-2 md:gap-4">
                   {[selectedMatch.fighter1, selectedMatch.fighter2].map((fighter, index) => (
                     <Link
                       key={fighter.id}
@@ -690,7 +720,8 @@ export default function Home() {
                           </h4>
                         </div>
                       </div>
-                      {renderRadarChart(fighter, index === 0 ? '#5C7CFF' : '#E8002D')}
+                      <div className="md:hidden">{renderCompactStats(fighter, index === 0 ? '#5C7CFF' : '#E8002D')}</div>
+                      <div className="hidden md:block">{renderRadarChart(fighter, index === 0 ? '#5C7CFF' : '#E8002D')}</div>
                     </Link>
                   ))}
                 </div>
